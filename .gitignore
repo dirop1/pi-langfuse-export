@@ -1,0 +1,11 @@
+node_modules/
+*.tgz
+export-langfuse-config.json
+.pi/
+.pi-subagents/
+.env
+.env.*
+.npmrc
+pi-langfuse-export-state/
+*.log
+.DS_Store

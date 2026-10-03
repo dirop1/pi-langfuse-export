@@ -1,0 +1,16 @@
+{
+  "name": "pi-langfuse-export",
+  "version": "0.1.0",
+  "description": "Manually export saved Pi conversations to Langfuse, incrementally and without background tracing.",
+  "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/dirop1/pi-langfuse-export.git" },
+  "homepage": "https://github.com/dirop1/pi-langfuse-export#readme",
+  "bugs": { "url": "https://github.com/dirop1/pi-langfuse-export/issues" },
+  "keywords": ["pi-package", "langfuse", "export", "observability"],
+  "files": ["src", "README.md", "LICENSE"],
+  "pi": { "extensions": ["./src/index.ts"] },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test", "check": "node --check src/core.mjs" }
+}
