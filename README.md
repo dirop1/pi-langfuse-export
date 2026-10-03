@@ -6,6 +6,12 @@ Useful when you work offline, cannot reach Langfuse, or want to decide whether a
 
 ## Install
 
+From npm:
+
+```sh
+pi install npm:pi-langfuse-export
+```
+
 From GitHub:
 
 ```sh
@@ -16,12 +22,6 @@ From a local checkout:
 
 ```sh
 pi install /path/to/pi-langfuse-export
-```
-
-After npm publication:
-
-```sh
-pi install npm:pi-langfuse-export
 ```
 
 Requires Node.js 22+ and Pi. Package metadata includes `pi-package` for discovery in the [Pi package gallery](https://pi.dev/packages).
@@ -118,6 +118,19 @@ npm pack --dry-run --ignore-scripts
 ```
 
 Tests use synthetic conversations and mocked ingestion responses; they do not contact Langfuse. Pi loads the TypeScript entrypoint directly; no build or dependency installation is needed.
+
+To develop alongside the installed npm package, use a separate local loader in `~/.pi/agent/extensions/langfuse-export-dev.ts` instead of installing the checkout directly:
+
+```ts
+import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
+import { registerLangfuseExport } from '/path/to/pi-langfuse-export/src/index.ts';
+
+export default function (pi: ExtensionAPI) {
+  registerLangfuseExport(pi, 'langfuse-export-dev');
+}
+```
+
+After `/reload`, the npm package provides `/langfuse-export` and this loader provides `/langfuse-export-dev`, with separate status indicators. Direct checkout installs still use `/langfuse-export`; command renaming is explicit, not inferred from the installation path. Both commands use the same configuration, trace IDs and checkpoints: the development command performs real uploads unless `--dry-run` is used.
 
 ## Acknowledgements and license
 

@@ -1,23 +1,26 @@
 import { getAgentDir, type ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import { buildPlan, exportPlan, loadConfig, sanitize } from './core.mjs';
 
-const HELP = '/langfuse-export [--all] [--metadata-only] [--dry-run] [--yes]\nExports saved active-branch history (including before compaction). --all includes abandoned branches. Nothing is sent automatically. Config: working-directory export-langfuse-config.json > global file > LANGFUSE_* env vars.';
-
 export default function langfuseExport(pi: ExtensionAPI) {
+  registerLangfuseExport(pi);
+}
+
+export function registerLangfuseExport(pi: ExtensionAPI, commandName: 'langfuse-export' | 'langfuse-export-dev' = 'langfuse-export') {
+  const help = `/${commandName} [--all] [--metadata-only] [--dry-run] [--yes]\nExports saved active-branch history (including before compaction). --all includes abandoned branches. Nothing is sent automatically. Config: working-directory export-langfuse-config.json > global file > LANGFUSE_* env vars.`;
   let busy = false;
   let generation = 0;
   let controller: AbortController | undefined;
   pi.on('session_shutdown', () => { generation++; controller?.abort(); });
-  pi.registerCommand('langfuse-export', {
+  pi.registerCommand(commandName, {
     description: 'Manually export saved conversation to Langfuse (incremental; no background tracing)',
     handler: async (args, ctx) => {
       const flags = new Set(args.trim().split(/\s+/).filter(Boolean));
-      if (flags.has('--help')) { ctx.ui.notify(HELP, 'info'); return; }
-      if ([...flags].some((flag) => !['--all', '--metadata-only', '--dry-run', '--yes'].includes(flag))) { ctx.ui.notify(HELP, 'warning'); return; }
+      if (flags.has('--help')) { ctx.ui.notify(help, 'info'); return; }
+      if ([...flags].some((flag) => !['--all', '--metadata-only', '--dry-run', '--yes'].includes(flag))) { ctx.ui.notify(help, 'warning'); return; }
       if (busy) { ctx.ui.notify('A Langfuse export is already running.', 'warning'); return; }
       if (!ctx.hasUI && !flags.has('--yes') && !flags.has('--dry-run')) throw new Error('Non-interactive export requires --yes.');
       // Reject rather than waiting indefinitely while the user expects a snapshot.
-      if (!ctx.isIdle()) { ctx.ui.notify('Wait until Pi finishes, then run /langfuse-export again.', 'warning'); return; }
+      if (!ctx.isIdle()) { ctx.ui.notify(`Wait until Pi finishes, then run /${commandName} again.`, 'warning'); return; }
       busy = true;
       const current = generation;
       const sessionId = ctx.sessionManager.getSessionId();
@@ -38,8 +41,8 @@ export default function langfuseExport(pi: ExtensionAPI) {
           const accepted = await ctx.ui.confirm('Export saved history to Langfuse?', `${entries.length} entries; ${flags.has('--all') ? 'ALL branches' : 'active branch'}; ${config.captureContent ? 'includes prompts, thinking, tool content and summaries, which may contain PII or secrets' : 'metadata only'}.\nDestination: ${config.baseUrl}\nOnly new or changed records are sent. Previously exported data is not deleted.`, { signal: abort.signal });
           if (!isCurrent() || !accepted) return;
         }
-        ctx.ui.setStatus('langfuse-export', 'Langfuse: exporting…');
-        const result = await exportPlan({ plan, config, agentDir: getAgentDir(), signal: abort.signal, onProgress: (done: number, total: number) => { if (isCurrent()) ctx.ui.setStatus('langfuse-export', `Langfuse: ${done}/${total}`); } });
+        ctx.ui.setStatus(commandName, 'Langfuse: exporting…');
+        const result = await exportPlan({ plan, config, agentDir: getAgentDir(), signal: abort.signal, onProgress: (done: number, total: number) => { if (isCurrent()) ctx.ui.setStatus(commandName, `Langfuse: ${done}/${total}`); } });
         if (!isCurrent()) return;
         const traceUrl = `${config.baseUrl}/trace/${encodeURIComponent(result.traceId)}`;
         ctx.ui.notify(result.count ? `Langfuse export complete: ${result.count} new/updated records.\n${traceUrl}` : `Langfuse is up to date.\n${traceUrl}`, 'info');
@@ -52,7 +55,7 @@ export default function langfuseExport(pi: ExtensionAPI) {
       } finally {
         busy = false;
         if (controller === abort) controller = undefined;
-        if (isCurrent()) ctx.ui.setStatus('langfuse-export', undefined);
+        if (isCurrent()) ctx.ui.setStatus(commandName, undefined);
       }
     },
   });
