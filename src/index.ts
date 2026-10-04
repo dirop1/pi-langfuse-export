@@ -12,7 +12,7 @@ export function registerLangfuseExport(pi: ExtensionAPI, commandName: 'langfuse-
   let controller: AbortController | undefined;
   pi.on('session_shutdown', () => { generation++; controller?.abort(); });
   pi.registerCommand(commandName, {
-    description: 'Manually export saved conversation to Langfuse (incremental; no background tracing)',
+    description: 'Share the saved conversation to Langfuse when you decide (incremental; no background tracing)',
     handler: async (args, ctx) => {
       const flags = new Set(args.trim().split(/\s+/).filter(Boolean));
       if (flags.has('--help')) { ctx.ui.notify(help, 'info'); return; }

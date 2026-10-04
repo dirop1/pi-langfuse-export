@@ -1,8 +1,8 @@
 # pi-langfuse-export
 
-Export **saved Pi conversations** to Langfuse on demand. One command, no background tracing, no automatic uploads, no runtime dependencies.
+Share a Pi conversation to Langfuse **when you decide to** — like Pi's built-in `/share`, but for observability instead of a link. One command, no background tracing, no automatic uploads, no runtime dependencies: nothing leaves your machine until you run `/langfuse-export` and confirm.
 
-Useful when you work offline, cannot reach Langfuse, or want to decide whether a conversation is safe to export **after** it happened. Resume an old session with `pi -c` or `/resume`, then run `/langfuse-export`.
+Automatic tracing streams every conversation in near real time, whether or not that session was meant to be shared. This is the opposite: finish the work, review the saved history, and export only the sessions worth keeping — retrospectively, even long after they happened. That also covers sessions from before the extension was installed, and work done offline or while Langfuse was unreachable. Resume an old session with `pi -c` or `/resume`, then run `/langfuse-export`.
 
 ## Install
 
@@ -75,7 +75,7 @@ Use your region's Langfuse Cloud endpoint or your self-hosted endpoint. HTTPS is
 
 ## Feature and limitation: saved history only
 
-The extension does not need to have been installed when the conversation happened. This enables offline work and retrospective export, but **cannot reconstruct data Pi never saved**.
+The extension does not need to have been installed when the conversation happened. This enables decide-when-to-share retrospective export — sessions from before installation, or from offline work — but it **cannot reconstruct data Pi never saved**.
 
 | Exported when present | Not reconstructed |
 |---|---|

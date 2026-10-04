@@ -1,7 +1,7 @@
 {
   "name": "pi-langfuse-export",
-  "version": "0.1.0",
-  "description": "Manually export saved Pi conversations to Langfuse, incrementally and without background tracing.",
+  "version": "0.1.1",
+  "description": "Share saved Pi conversations to Langfuse when you decide: incremental, manual export with no background tracing.",
   "type": "module",
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/dirop1/pi-langfuse-export.git" },
