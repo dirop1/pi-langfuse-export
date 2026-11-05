@@ -1,6 +1,6 @@
 # pi-langfuse-export
 
-Share a Pi conversation to Langfuse **when you decide to** — like Pi's built-in `/share`, but for observability instead of a link. One command, no background tracing, no automatic uploads, no runtime dependencies: nothing leaves your machine until you run `/langfuse-export` and confirm.
+Share a Pi conversation to Langfuse **when you decide to** — like Pi's built-in `/share`, but for observability instead of a link. One command, no background tracing, no automatic uploads, no runtime dependencies: nothing leaves your machine until you run `/langfuse-export` and approve the destination (once or with remembered server approval).
 
 Automatic tracing streams every conversation in near real time, whether or not that session was meant to be shared. This is the opposite: finish the work, review the saved history, and export only the sessions worth keeping — retrospectively, even long after they happened. That also covers sessions from before the extension was installed, and work done offline or while Langfuse was unreachable. Resume an old session with `pi -c` or `/resume`, then run `/langfuse-export`.
 
@@ -37,7 +37,9 @@ Requires Node.js 22+ and Pi. Package metadata includes `pi-package` for discover
 /langfuse-export --help
 ```
 
-By default, exports the **current branch's full saved history**, including entries before compaction. `--all` explicitly includes alternative/abandoned branches. The command asks for confirmation before uploading; `--yes` deliberately bypasses it and is required for non-interactive uploads. Wait until the agent is idle before exporting.
+By default, exports the **current branch's full saved history**, including entries before compaction. `--all` explicitly includes alternative/abandoned branches. The command offers **No**, **Yes, export once**, and **Yes, don’t ask again for this server** before uploading. Remembered approval applies across sessions and all projects at that exact server URL (including its base path), regardless of content or branch scope. A different server asks again. `--yes` bypasses confirmation for this invocation without saving approval and is still required for non-interactive uploads.
+
+You can run the command while the model is working: it queues until Pi is idle, then reads the saved history and configuration. Only one export per command can be queued/running; duplicate requests are rejected, not merged. Switching sessions, reloading, or shutting down cancels queued and active work. Queues are in memory and do not survive restart.
 
 `--dry-run` builds the candidate records without network requests or checkpoint writes. It reports candidate counts, not the incremental count. The footer shows progress; a notification reports completion, an already-up-to-date state, or an error. Successful exports and already-up-to-date notifications include the full trace URL (`<baseUrl>/trace/<traceId>`), using Langfuse's trace-link route. No model call is made.
 
@@ -59,7 +61,11 @@ Configuration is read on each invocation. Precedence per field, highest first:
 }
 ```
 
-Keep credential files outside version control and restrict permissions to `0600`. Malformed/inaccessible configuration fails safely instead of silently falling back to another destination. Global and project files are not modified by this extension.
+Keep credential files outside version control and restrict permissions to `0600`. Malformed/inaccessible configuration fails safely instead of silently falling back to another destination. Global and project configuration files are not modified by this extension.
+
+### Remembered server approval
+
+Approval is stored separately in `<agent-directory>/pi-langfuse-export-consent/<server-hash>.json` as `{"approved":true}`. The filename hashes the normalized server URL; the file contains no keys or conversation content. The default agent directory is `~/.pi/agent`. To forget approval, delete the matching JSON file or change `approved` to `false`; delete all JSON files in this consent directory to reset all servers. Files are read on each interactive upload. No extra reset command is needed. Malformed/inaccessible consent files stop the export safely. Dry runs never read or write approval.
 
 | Field | Environment | Default |
 |---|---|---|
@@ -103,7 +109,7 @@ Each request has a 30-second timeout. Batches contain at most 50 events and appr
 
 ## Privacy
 
-**Manual does not mean anonymized.** Content may include PII, source code, credentials, shell output, custom-message details and compaction summaries. Review your session and destination before confirming. Configured Langfuse keys are masked, but this is **not a general secret or PII scanner**.
+**Manual does not mean anonymized.** Content may include PII, source code, credentials, shell output, custom-message details and compaction summaries. Review your session and destination before confirming or remembering approval. Remembered approval skips future prompts, not the requirement to explicitly run the export command. Configured Langfuse keys are masked, but this is **not a general secret or PII scanner**.
 
 `--metadata-only` or `"captureContent": false` omits message/tool/summary bodies. Operational metadata such as session/header paths, entry identifiers, models and usage remains. Trace visibility defaults to non-public, subject to your Langfuse project's access controls.
 

@@ -42,6 +42,22 @@ export async function loadConfig(agentDir, cwd, env = process.env, trusted = fal
   return config;
 }
 
+// One file per normalized endpoint avoids read/modify/write races across servers.
+export function consentPath(agentDir, baseUrl) {
+  return join(agentDir, 'pi-langfuse-export-consent', `${hash(new URL(baseUrl).href.replace(/\/$/, ''))}.json`);
+}
+
+export async function hasServerConsent(agentDir, baseUrl) {
+  const consent = await readJson(consentPath(agentDir, baseUrl), {});
+  return consent?.approved === true;
+}
+
+export async function rememberServerConsent(agentDir, baseUrl) {
+  const path = consentPath(agentDir, baseUrl);
+  await mkdir(join(agentDir, 'pi-langfuse-export-consent'), { recursive: true, mode: 0o700 });
+  await saveState(path, { approved: true });
+}
+
 // Only known Langfuse keys are masked: this is deliberately not a PII scanner.
 export function sanitize(value, secrets = []) {
   const mask = (text) => secrets.filter(Boolean).reduce((out, secret) => out.split(secret).join('[REDACTED]'), text)

@@ -1,6 +1,6 @@
 {
   "name": "pi-langfuse-export",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Share saved Pi conversations to Langfuse when you decide: incremental, manual export with no background tracing.",
   "type": "module",
   "license": "MIT",
